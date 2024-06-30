@@ -1,9 +1,8 @@
-﻿namespace DAL.Entities;
+﻿namespace BLL.Models;
 
-public class CartEntity
+public class Cart
 {
     public int Id { get; set; }
     public double Discount { get; set; }
-    public ICollection<CartItemEntity> CartItems { get; set; }
     public double TotalPrice { get; set; }
 }
