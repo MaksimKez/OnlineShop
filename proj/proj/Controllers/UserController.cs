@@ -7,6 +7,7 @@ using proj.ViewModels;
 namespace proj.Controllers;
 
 [ApiController]
+[Route("api/[controller]")]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -17,24 +18,36 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("GetById/{id:int}")]
-    public UserViewModel Get(int id)
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<UserViewModel> Get(int id)
     {
-        var dto = _userService.Get(id);
-        return new UserViewModel()
+        try
         {
-            Id = dto.Id,
-            Username = dto.Username,
-            FirstName = dto.FirstName,
-            SecondName = dto.SecondName,
-            CartId = dto.CartId,
-            DateOfBirth = dto.DateOfBirth,
-            Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber
-        };
+            var dto = _userService.Get(id);
+
+            var userViewModel = new UserViewModel()
+            {
+                Id = dto.Id,
+                Username = dto.Username,
+                FirstName = dto.FirstName,
+                SecondName = dto.SecondName,
+                CartId = dto.CartId,
+                DateOfBirth = dto.DateOfBirth,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber
+            };
+            return Ok(userViewModel);
+        }
+        catch (ArgumentException e)
+        {
+            return NotFound();
+        }
     }
 
     [HttpGet("GetWithoutOrders")]
-    public async Task<UserViewModel[]> GetWithoutOrders()
+    [ProducesResponseType(typeof(UserViewModel[]), StatusCodes.Status200OK)]
+    public async Task<ActionResult<UserViewModel[]>> GetWithoutOrders()
     {
         var dtos = await _userService.GetAllWithoutOrders();
         var users = dtos.Select(dto => new UserViewModel()
@@ -47,13 +60,19 @@ public class UserController : ControllerBase
             DateOfBirth = dto.DateOfBirth,
             Email = dto.Email,
             PhoneNumber = dto.PhoneNumber
-        });
-        return users.ToArray();
+        }).ToArray();
+        return Ok(users);
     }
 
     [HttpPost("CreateUser")]
-    public UserViewModel Create([FromBody] UserViewModel userViewModel)
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<UserViewModel> Create([FromBody] UserViewModel userViewModel)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
         var dto = new UserDto()
         {
             Id = userViewModel.Id,
@@ -66,37 +85,53 @@ public class UserController : ControllerBase
             PhoneNumber = userViewModel.PhoneNumber
         };
         userViewModel.Id = _userService.Create(dto);
-        return userViewModel;
+        return CreatedAtAction(nameof(Get), new { id = userViewModel.Id }, userViewModel);
     }
 
     [HttpPut("UpdateUser")]
-    public UserViewModel UpdateUser([FromBody] UserViewModel userViewModel)
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<UserViewModel> UpdateUser([FromBody] UserViewModel userViewModel)
     {
-        _userService.Update(new UserDto()
+        if (!ModelState.IsValid)
         {
-            Id = userViewModel.Id,
-            Username = userViewModel.Username,
-            FirstName = userViewModel.FirstName,
-            SecondName = userViewModel.SecondName,
-            CartId = userViewModel.CartId,
-            DateOfBirth = userViewModel.DateOfBirth,
-            Email = userViewModel.Email,
-            PhoneNumber = userViewModel.PhoneNumber
-        });
-        return userViewModel;
+            return BadRequest(ModelState);
+        }
+        try
+        {
+            _userService.Update(new UserDto()
+            {
+                Id = userViewModel.Id,
+                Username = userViewModel.Username,
+                FirstName = userViewModel.FirstName,
+                SecondName = userViewModel.SecondName,
+                CartId = userViewModel.CartId,
+                DateOfBirth = userViewModel.DateOfBirth,
+                Email = userViewModel.Email,
+                PhoneNumber = userViewModel.PhoneNumber
+            });
+            return Ok(userViewModel);
+        }
+        catch (Exception)
+        {
+            return NotFound();
+        }
     }
 
     [HttpDelete("Delete/{id:int}")]
-    public bool Delete(int id)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Delete(int id)
     {
         try
         {
             _userService.Delete(id);
-            return true;
+            return NoContent();
         }
         catch (ArgumentException)
         {
-            return false;
+            return NotFound();
         }
     }
 }
