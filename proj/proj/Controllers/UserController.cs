@@ -17,7 +17,7 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet("GetById/{id:int}")]
+    [HttpGet("GetUserById/{id:int}")]
     [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<UserViewModel> Get(int id)
@@ -119,7 +119,7 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpDelete("Delete/{id:int}")]
+    [HttpDelete("DeleteUser/{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Delete(int id)

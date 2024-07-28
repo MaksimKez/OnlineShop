@@ -76,7 +76,7 @@ public class ProductController : ControllerBase
         });
         return productViewModel;
     }
-    [HttpDelete("Delete/{id:int}")]
+    [HttpDelete("DeleteProduct/{id:int}")]
     public bool Delete(int id)
     {
         try

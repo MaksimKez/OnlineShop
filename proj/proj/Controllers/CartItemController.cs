@@ -27,7 +27,7 @@ public class CartItemController : ControllerBase
         };
     }
 
-    [HttpGet("{cartId:int}")]
+    [HttpGet("GetItemById{cartId:int}")]
     public async Task<IEnumerable<CartItemViewModel>> GetAllFromCart(int cartId)
     {
         var dtos = await _cartItemService.GetAllFromCart(cartId);
@@ -40,7 +40,7 @@ public class CartItemController : ControllerBase
         }).ToList();
     }
 
-    [HttpPost("Create")]
+    [HttpPost("CreateItem")]
     public CartItemViewModel Create([FromBody] CartItemViewModel cartItemViewModel)
     {
         var dto = new CartItemDto()
@@ -68,7 +68,7 @@ public class CartItemController : ControllerBase
         return cartItemViewModel;
     }
 
-    [HttpDelete("Delete{id:int}")]
+    [HttpDelete("DeleteItem{id:int}")]
     public void Delete(int id)
     {
         _cartItemService.Delete(id);

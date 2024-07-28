@@ -70,7 +70,7 @@ public class CartController : ControllerBase
         };
     }
 
-    [HttpDelete("Delete{id:int}")]
+    [HttpDelete("DeleteCart{id:int}")]
     public bool Delete(int id)
     {
         try

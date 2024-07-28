@@ -14,7 +14,7 @@ public class OrderController : ControllerBase
         _service = service ?? throw new ArgumentException(nameof(service), "Service err");
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("GetOrderById{id:int}")]
     public OrderViewModel GetById(int id)
     {
         var dto = _service.Get(id);
@@ -54,7 +54,7 @@ public class OrderController : ControllerBase
         return orderViewModel;
     }
 
-    [HttpDelete("Delete/{id:int}")]
+    [HttpDelete("DeleteOrder/{id:int}")]
     public bool Delete(int id)
     {
         try
