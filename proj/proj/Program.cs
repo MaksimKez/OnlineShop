@@ -1,7 +1,10 @@
 
+using DAL;
+using Microsoft.EntityFrameworkCore;
+
 namespace proj
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
@@ -13,6 +16,11 @@ namespace proj
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            
+            builder.Services.AddDbContext<ApplicationDbContext>(x =>
+            {
+                x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
 
             var app = builder.Build();
 

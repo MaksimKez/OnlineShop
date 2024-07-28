@@ -8,6 +8,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
 {
     public void Configure(EntityTypeBuilder<UserEntity> builder)
     {
+        builder.HasKey(us => us.Id);
         builder.Property(us => us.Username)
             .IsRequired();
         builder.Property(us => us.FirstName)

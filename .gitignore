@@ -2,3 +2,8 @@
 proj/BLL/obj
 proj/DAL/obj
 proj/proj/obj
+proj/BLL/bin
+proj/BLL.Tests/obj/Debug
+proj/BLL.Tests/obj
+proj/DAL/bin/Debug
+proj/proj/bin

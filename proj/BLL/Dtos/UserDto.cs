@@ -1,6 +1,6 @@
-﻿namespace DAL.Entities;
+﻿namespace BLL.Dtos;
 
-public class UserEntity
+public class UserDto
 {
     public int Id { get; set; }
     public string Username { get; set; }
@@ -10,6 +10,4 @@ public class UserEntity
     public string Email { get; set; }
     public string PhoneNumber { get; set; }
     public int? CartId { get; set; }
-    public CartEntity Cart { get; set; }
-    public ICollection<OrderEntity> Orders { get; set; }
 }
