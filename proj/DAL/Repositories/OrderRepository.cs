@@ -11,7 +11,7 @@ public class OrderRepository(ApplicationDbContext dbContext) : IOrderRepository
         return order.Entity.Id;
     }
 
-    public OrderEntity Read(int id)
+    public OrderEntity Read(int? id)
     {
         var order = dbContext.Orders.FirstOrDefault(or => or.Id == id);
         return order ?? throw new ArgumentException(nameof(id));
@@ -23,7 +23,7 @@ public class OrderRepository(ApplicationDbContext dbContext) : IOrderRepository
         dbContext.SaveChanges();
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         var order = dbContext.Orders.FirstOrDefault(or => or.Id == id);
         if (order == null)

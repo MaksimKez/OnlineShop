@@ -3,7 +3,7 @@
 public interface ICrudRepository<TEntity>
 {
     int Create(TEntity entity);
-    TEntity Read(int id);
+    TEntity Read(int? id);
     void Update(TEntity entity);
-    void Delete(int id);
+    void Delete(int? id);
 }

@@ -1,7 +1,7 @@
-﻿using System.Data.SqlTypes;
-using BLL.Dtos;
+﻿using BLL.Dtos;
 using BLL.Services;
 using Microsoft.AspNetCore.Mvc;
+using proj.Mappers;
 using proj.ViewModels;
 
 namespace proj.Controllers;
@@ -11,38 +11,23 @@ namespace proj.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IMapperVMs<UserViewModel, UserDto> _mapper;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IMapperVMs<UserViewModel, UserDto> mapper)
     {
         _userService = userService;
+        _mapper = mapper;
     }
 
     [HttpGet("GetUserById/{id:int}")]
     [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<UserViewModel> Get(int id)
+    public ActionResult<UserViewModel> Get([FromQuery]int? id)
     {
-        try
-        {
-            var dto = _userService.Get(id);
+        if (id is null or < 0) return NotFound();
+        var dto = _userService.Get(id);
 
-            var userViewModel = new UserViewModel()
-            {
-                Id = dto.Id,
-                Username = dto.Username,
-                FirstName = dto.FirstName,
-                SecondName = dto.SecondName,
-                CartId = dto.CartId,
-                DateOfBirth = dto.DateOfBirth,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber
-            };
-            return Ok(userViewModel);
-        }
-        catch (ArgumentException e)
-        {
-            return NotFound();
-        }
+        return Ok(_mapper.MapToVm(dto));
     }
 
     [HttpGet("GetWithoutOrders")]
@@ -50,41 +35,20 @@ public class UserController : ControllerBase
     public async Task<ActionResult<UserViewModel[]>> GetWithoutOrders()
     {
         var dtos = await _userService.GetAllWithoutOrders();
-        var users = dtos.Select(dto => new UserViewModel()
-        {
-            Id = dto.Id,
-            Username = dto.Username,
-            FirstName = dto.FirstName,
-            SecondName = dto.SecondName,
-            CartId = dto.CartId,
-            DateOfBirth = dto.DateOfBirth,
-            Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber
-        }).ToArray();
+        var users = dtos.Select(dto => _mapper.MapToVm(dto)).ToArray();
         return Ok(users);
     }
 
     [HttpPost("CreateUser")]
     [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<UserViewModel> Create([FromBody] UserViewModel userViewModel)
+    public ActionResult<UserViewModel> Create(UserViewModel userViewModel)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-        var dto = new UserDto()
-        {
-            Id = userViewModel.Id,
-            Username = userViewModel.Username,
-            FirstName = userViewModel.FirstName,
-            SecondName = userViewModel.SecondName,
-            CartId = userViewModel.CartId,
-            DateOfBirth = userViewModel.DateOfBirth,
-            Email = userViewModel.Email,
-            PhoneNumber = userViewModel.PhoneNumber
-        };
-        userViewModel.Id = _userService.Create(dto);
+        userViewModel.Id = _userService.Create(_mapper.MapToDto(userViewModel));
         return CreatedAtAction(nameof(Get), new { id = userViewModel.Id }, userViewModel);
     }
 
@@ -100,17 +64,7 @@ public class UserController : ControllerBase
         }
         try
         {
-            _userService.Update(new UserDto()
-            {
-                Id = userViewModel.Id,
-                Username = userViewModel.Username,
-                FirstName = userViewModel.FirstName,
-                SecondName = userViewModel.SecondName,
-                CartId = userViewModel.CartId,
-                DateOfBirth = userViewModel.DateOfBirth,
-                Email = userViewModel.Email,
-                PhoneNumber = userViewModel.PhoneNumber
-            });
+            _userService.Update(_mapper.MapToDto(userViewModel));
             return Ok(userViewModel);
         }
         catch (Exception)
@@ -122,16 +76,10 @@ public class UserController : ControllerBase
     [HttpDelete("DeleteUser/{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult Delete(int id)
+    public IActionResult Delete(int? id)
     {
-        try
-        {
-            _userService.Delete(id);
-            return NoContent();
-        }
-        catch (ArgumentException)
-        {
-            return NotFound();
-        }
+        if(id is null or < 0) return NotFound();
+        _userService.Delete(id);
+        return Ok();
     }
 }

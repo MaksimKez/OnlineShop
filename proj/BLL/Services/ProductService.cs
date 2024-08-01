@@ -22,7 +22,7 @@ public class ProductService : IProductService
         return _repository.Create(entity);
     }
 
-    public ProductDto Get(int id)
+    public ProductDto Get(int? id)
     {
         return _mapper.MapToModel(_repository.Read(id));
     }
@@ -32,7 +32,7 @@ public class ProductService : IProductService
         _repository.Update(_mapper.MapFromModel(dto));
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         _repository.Delete(id);
     }

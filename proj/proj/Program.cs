@@ -1,11 +1,13 @@
-
 using BLL.Dtos;
+using BLL.FluentValidation;
 using BLL.Mappers;
 using BLL.Services;
 using DAL;
 using DAL.Entities;
 using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 namespace proj
 {
@@ -18,6 +20,7 @@ namespace proj
             // Add services to the container.
 
             builder.Services.AddControllers();
+            
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -39,6 +42,13 @@ namespace proj
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddScoped<ICartItemService, CartItemService>();
+            
+            builder.Services.AddValidatorsFromAssemblyContaining<UserValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<ProductValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<OrderValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CartValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CartItemValidator>();
+            builder.Services.AddFluentValidationAutoValidation();
             
             builder.Services.AddDbContext<ApplicationDbContext>(x =>
             {

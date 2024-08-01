@@ -11,7 +11,7 @@ public class CartItemRepository(ApplicationDbContext dbContext) : ICartItemRepos
         return item.Entity.Id;
     }
 
-    public CartItemEntity Read(int id)
+    public CartItemEntity Read(int? id)
     {
         var item = dbContext.CartItems.FirstOrDefault(it => it.Id == id);
         return item ?? throw new ArgumentException(nameof(id));
@@ -23,7 +23,7 @@ public class CartItemRepository(ApplicationDbContext dbContext) : ICartItemRepos
         dbContext.SaveChanges();
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         var item = dbContext.CartItems.FirstOrDefault(it => it.Id == id);
         if(item == null)

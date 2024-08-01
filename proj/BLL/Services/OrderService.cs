@@ -23,7 +23,7 @@ public class OrderService : IOrderService
         return _repository.Create(entity);
     }
 
-    public OrderDto Get(int id)
+    public OrderDto Get(int? id)
     {
         return _mapper.MapToModel(_repository.Read(id));
     }
@@ -33,7 +33,7 @@ public class OrderService : IOrderService
         _repository.Update(_mapper.MapFromModel(dto));
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         _repository.Delete(id);
     }
