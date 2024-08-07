@@ -5,8 +5,9 @@ namespace BLL.Mappers;
 
 public class UserMapper : IMapper<UserDto, UserEntity>
 {
-    public UserDto MapToModel(UserEntity userEntity)
+    public UserDto? MapToModel(UserEntity? userEntity)
     {
+        if (userEntity is null) return null;
         return new UserDto
         {
             Id = userEntity.Id,
@@ -20,8 +21,9 @@ public class UserMapper : IMapper<UserDto, UserEntity>
         };
     }
 
-    public UserEntity MapFromModel(UserDto userDto)
+    public UserEntity? MapFromModel(UserDto? userDto)
     {
+        if (userDto is null) return null;
         return new UserEntity
         {
             Id = userDto.Id,

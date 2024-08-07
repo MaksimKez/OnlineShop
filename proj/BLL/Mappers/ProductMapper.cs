@@ -6,8 +6,9 @@ namespace BLL.Mappers;
 public class ProductMapper : IMapper<ProductDto, ProductEntity
 >
 {
-    public ProductDto MapToModel(ProductEntity entity)
+    public ProductDto? MapToModel(ProductEntity? entity)
     {
+        if (entity is null) return null;
         return new ProductDto
         {
             Id = entity.Id,
@@ -19,8 +20,9 @@ public class ProductMapper : IMapper<ProductDto, ProductEntity
         };
     }
 
-    public ProductEntity MapFromModel(ProductDto dto)
+    public ProductEntity? MapFromModel(ProductDto? dto)
     {
+        if (dto is null) return null;
         return new ProductEntity
         {
             Id = dto.Id,

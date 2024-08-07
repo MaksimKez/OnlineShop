@@ -8,6 +8,8 @@ using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using proj.Mappers;
+using proj.ViewModels;
 
 namespace proj
 {
@@ -30,6 +32,12 @@ namespace proj
             builder.Services.AddScoped<IMapper<OrderDto, OrderEntity>, OrderMapper>();
             builder.Services.AddScoped<IMapper<CartDto, CartEntity>, CartMapper>();
             builder.Services.AddScoped<IMapper<CartItemDto, CartItemEntity>, CartItemMapper>();
+            
+            builder.Services.AddScoped<IMapperVMs<CartItemViewModel, CartItemDto>, CartItemMapperVm>();
+            builder.Services.AddScoped<IMapperVMs<CartViewModel, CartDto>, CartMapperVm>();
+            builder.Services.AddScoped<IMapperVMs<UserViewModel, UserDto>, UserMapperVm>();
+            builder.Services.AddScoped<IMapperVMs<ProductViewModel, ProductDto>, ProductMapperVm>();
+            builder.Services.AddScoped<IMapperVMs<OrderViewModel, OrderDto>, OrderMapperVm>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();

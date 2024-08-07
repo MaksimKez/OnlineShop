@@ -11,5 +11,5 @@ public class UserEntity
     public string PhoneNumber { get; set; }
     public int? CartId { get; set; }
     public CartEntity Cart { get; set; }
-    public ICollection<OrderEntity> Orders { get; set; }
+    public ICollection<OrderEntity>? Orders { get; set; }
 }

@@ -22,7 +22,7 @@ public class UserService : IUserService
         return _userRepository.Create(entity);
     }
 
-    public UserDto Get(int? id)
+    public UserDto? Get(int? id)
     {
         return _mapper.MapToModel(_userRepository.Read(id));
     }

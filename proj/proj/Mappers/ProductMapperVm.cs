@@ -5,8 +5,9 @@ namespace proj.Mappers;
 
 public class ProductMapperVm : IMapperVMs<ProductViewModel, ProductDto>
 {
-    public ProductViewModel MapToVm(ProductDto dto)
+    public ProductViewModel? MapToVm(ProductDto? dto)
     {
+        if (dto is null) return null;
         return new ProductViewModel
         {
             Id = dto.Id,
@@ -18,8 +19,9 @@ public class ProductMapperVm : IMapperVMs<ProductViewModel, ProductDto>
         };
     }
 
-    public ProductDto MapToDto(ProductViewModel viewModel)
+    public ProductDto? MapToDto(ProductViewModel? viewModel)
     {
+        if (viewModel is null) return null;
         return new ProductDto
         {
             Id = viewModel.Id,

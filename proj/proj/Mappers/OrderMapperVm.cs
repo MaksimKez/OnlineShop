@@ -16,8 +16,9 @@ public class OrderMapperVm : IMapperVMs<OrderViewModel, OrderDto>
         };
     }
 
-    public OrderDto MapToDto(OrderViewModel viewModel)
+    public OrderDto? MapToDto(OrderViewModel? viewModel)
     {
+        if (viewModel is null) return null;
         return new OrderDto
         {
             Id = viewModel.Id,

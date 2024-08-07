@@ -2,6 +2,6 @@
 
 public interface IMapperVMs<TViewModel, TDto>
 {
-    TViewModel MapToVm(TDto dto);
-    TDto MapToDto(TViewModel viewModel);
+    TViewModel? MapToVm(TDto? dto);
+    TDto? MapToDto(TViewModel? viewModel);
 }

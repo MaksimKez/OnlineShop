@@ -5,8 +5,9 @@ namespace proj.Mappers;
 
 public class UserMapperVm : IMapperVMs<UserViewModel, UserDto>
 {
-    public UserViewModel MapToVm(UserDto dto)
+    public UserViewModel? MapToVm(UserDto? dto)
     {
+        if (dto is null) return null;
         return new UserViewModel
         {
             Id = dto.Id,
