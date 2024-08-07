@@ -13,16 +13,18 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IMapperVMs<UserViewModel, UserDto> _mapper;
-
-    public UserController(IUserService userService, IMapperVMs<UserViewModel, UserDto> mapper)
+    private readonly UserValidator _userValidator;
+    public UserController(IUserService userService, IMapperVMs<UserViewModel, UserDto> mapper, UserValidator userValidator)
     {
         _userService = userService;
         _mapper = mapper;
+        _userValidator = userValidator;
     }
 
     [HttpGet("GetUserById")]
     [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<UserViewModel> Get([FromQuery]int? id)
     {
         if (id is null or < 0) return BadRequest("Id must be greater than zero and must not be null.");
@@ -45,39 +47,41 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<UserViewModel> Create([FromBody] UserViewModel userViewModel)
     {
-        //if (!ModelState.IsValid)
-       // {
-            //    return BadRequest(ModelState);
-            //}
-            userViewModel.Id = _userService.Create(_mapper.MapToDto(userViewModel));
-            return CreatedAtAction(nameof(Get), new { id = userViewModel.Id }, userViewModel);
-        }
+        var dto = _mapper.MapToDto(userViewModel);
+        var validationResult = _userValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        userViewModel.Id = _userService.Create(dto!); 
+        return CreatedAtAction(nameof(Create), new { id = userViewModel.Id }, userViewModel);
+    }
 
+    [HttpPut("UpdateUser")]
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)] [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<UserViewModel> UpdateUser([FromBody] UserViewModel userViewModel)
+    {
+        var dto = _mapper.MapToDto(userViewModel);
+        var validationResult = _userValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        _userService.Update(_mapper.MapToDto(userViewModel));
+        return Ok(userViewModel);
+    }
 
-        [HttpPut("UpdateUser")]
-        [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<UserViewModel> UpdateUser([FromBody] UserViewModel userViewModel)
-        {
-            _userService.Update(_mapper.MapToDto(userViewModel));
-            return Ok(userViewModel);
+    [HttpDelete("DeleteUser/{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Delete([FromRoute]int? id)
+    { 
+        if (id is null or < 0) return BadRequest();
+        try 
+        { 
+            _userService.Delete(id);
+            return NoContent();
         }
-
-        [HttpDelete("DeleteUser/{id:int}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Delete([FromRoute]int? id)
-        {
-            if (id is null or < 0) return BadRequest();
-            try
-            {
-                _userService.Delete(id);
-                return NoContent();
-            }
-            catch (ArgumentException e)
-            {
-                return NotFound();
-            }
+        catch (ArgumentException e) 
+        { 
+            return NotFound();
         }
+    }
 }

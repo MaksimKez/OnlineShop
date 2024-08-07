@@ -1,82 +1,78 @@
 ﻿using BLL.Dtos;
+using BLL.FluentValidation;
 using BLL.Services;
-using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using proj.Mappers;
 using proj.ViewModels;
 
 namespace proj.Controllers;
 
+[ApiController]
+[Route("api/[controller]")]
 public class ProductController : ControllerBase
 {
     private readonly IProductService _service;
+    private readonly IMapperVMs<ProductViewModel, ProductDto> _mapper;
+    private readonly ProductValidator _productValidator;
 
-    public ProductController(IProductService service)
+    public ProductController(IProductService service, IMapperVMs<ProductViewModel, ProductDto> mapper, ProductValidator productValidator)
     {
-        _service = service ?? throw new ArgumentException(nameof(service), "Service err");
+        _service = service ?? throw new ArgumentException("Service err", nameof(service));
+        _mapper = mapper ?? throw new ArgumentException("Mapper err", nameof(service));
+        _productValidator = productValidator ?? throw new ArgumentException("Validator err", nameof(service));
     }
 
     [HttpGet("GetProductById")]
-    public ProductViewModel GetById([FromBody] int id)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<ProductViewModel> GetById([FromBody] int? id)
     {
+        if (id is null or < 0) return BadRequest("Id must be greater than zero and must not be null.");
         var dto = _service.Get(id);
-        return new ProductViewModel
-        {
-            Id = dto.Id,
-            ProductType = dto.ProductType,
-            Description = dto.Description,
-            PhotoUrl = dto.PhotoUrl,
-            PricePerUnit = dto.PricePerUnit,
-            StockQuantity = dto.StockQuantity
-        };
+        if (dto is null) return NotFound();
+        return Ok(_mapper.MapToVm(dto));
     }
 
     [HttpGet("GetOutOfStockProducts")]
-    public async Task<List<ProductViewModel>> GetOutOfStock()
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<ProductViewModel>>> GetOutOfStock()
     {
         var dtos = await _service.GetOutOfStock();
-        var products = dtos.Select(dto => new ProductViewModel()
-        {
-            Id = dto.Id,
-            ProductType = dto.ProductType,
-            Description = dto.Description,
-            PhotoUrl = dto.PhotoUrl,
-            PricePerUnit = dto.PricePerUnit,
-            StockQuantity = dto.StockQuantity
-        });
-        return products.ToList();
+        if (dtos.IsNullOrEmpty()) return NotFound();
+        var products = dtos.Select(dto => _mapper.MapToVm(dto));
+        return products.ToList()!;
     }
 
     [HttpPost("CreateProduct")]
-    public ProductViewModel Create([FromBody] ProductViewModel productViewModel)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<ProductViewModel> Create([FromBody] ProductViewModel productViewModel)
     {
-        var dto = new ProductDto()
-        {
-            Id = productViewModel.Id,
-            ProductType = productViewModel.ProductType,
-            Description = productViewModel.Description,
-            PhotoUrl = productViewModel.PhotoUrl,
-            PricePerUnit = productViewModel.PricePerUnit,
-            StockQuantity = productViewModel.StockQuantity
-        };
-        productViewModel.Id = _service.Create(dto);
-        return productViewModel;
+        var dto = _mapper.MapToDto(productViewModel);
+        productViewModel.Id = _service.Create(dto!);
+        return Ok(productViewModel);
     }
 
     [HttpPut("UpdateProduct")]
-    public ProductViewModel Update([FromBody] ProductViewModel productViewModel)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<ProductViewModel> Update([FromBody] ProductViewModel productViewModel)
     {
-        _service.Update(new ProductDto()
-        {
-            Id = productViewModel.Id,
-            ProductType = productViewModel.ProductType,
-            Description = productViewModel.Description,
-            PhotoUrl = productViewModel.PhotoUrl,
-            PricePerUnit = productViewModel.PricePerUnit,
-            StockQuantity = productViewModel.StockQuantity
-        });
-        return productViewModel;
+        var dto = _mapper.MapToDto(productViewModel);
+        var validationResult = _productValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        _service.Update(dto!);
+        return Ok(productViewModel);
     }
+
     [HttpDelete("DeleteProduct/{id:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public bool Delete(int id)
     {
         try
@@ -91,29 +87,28 @@ public class ProductController : ControllerBase
     }
 
     [HttpPatch("IncrementStock/{count:int}")]
-    public void IncrementStock([FromBody]ProductViewModel productViewModel, [FromQuery] int count)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult IncrementStock([FromBody] ProductViewModel productViewModel, [FromQuery] int count)
     {
-        _service.IncrementStock(new ProductDto()
-        {
-            Id = productViewModel.Id,
-            ProductType = productViewModel.ProductType,
-            Description = productViewModel.Description,
-            PhotoUrl = productViewModel.PhotoUrl,
-            PricePerUnit = productViewModel.PricePerUnit,
-            StockQuantity = productViewModel.StockQuantity
-        }, count);
+        var dto = _mapper.MapToDto(productViewModel);
+        var validationResult = _productValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        _service.IncrementStock(dto!, count);
+        return Ok();
     }
+    
     [HttpPatch("DecrementStock/{count:int}")]
-    public void DecrementStock([FromBody]ProductViewModel productViewModel, [FromQuery] int count)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult DecrementStock([FromBody] ProductViewModel productViewModel, [FromQuery] int count)
     {
-        _service.DecrementStock(new ProductDto()
-        {
-            Id = productViewModel.Id,
-            ProductType = productViewModel.ProductType,
-            Description = productViewModel.Description,
-            PhotoUrl = productViewModel.PhotoUrl,
-            PricePerUnit = productViewModel.PricePerUnit,
-            StockQuantity = productViewModel.StockQuantity
-        }, count);
+        var dto = _mapper.MapToDto(productViewModel);
+        var validationResult = _productValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        _service.DecrementStock(dto!, count);
+        return Ok();
     }
 }
