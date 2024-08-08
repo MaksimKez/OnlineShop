@@ -2,6 +2,7 @@
 using BLL.FluentValidation;
 using BLL.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using proj.Mappers;
 using proj.ViewModels;
 
@@ -38,6 +39,8 @@ public class UserController : ControllerBase
     public async Task<ActionResult<UserViewModel[]>> GetWithoutOrders()
     {
         var dtos = await _userService.GetAllWithoutOrders();
+        if (dtos.IsNullOrEmpty()) return NotFound();
+        
         var users = dtos.Select(dto => _mapper.MapToVm(dto)).ToArray();
         return Ok(users);
     }
@@ -64,7 +67,7 @@ public class UserController : ControllerBase
         var validationResult = _userValidator.Validate(dto!);
         if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
         
-        _userService.Update(_mapper.MapToDto(userViewModel));
+        _userService.Update(dto!);
         return Ok(userViewModel);
     }
 
@@ -79,7 +82,7 @@ public class UserController : ControllerBase
             _userService.Delete(id);
             return NoContent();
         }
-        catch (ArgumentException e) 
+        catch (ArgumentException) 
         { 
             return NotFound();
         }

@@ -32,7 +32,7 @@ public class CartItemRepository(ApplicationDbContext dbContext) : ICartItemRepos
         dbContext.SaveChanges();
     }
 
-    public IQueryable<CartItemEntity> GetAllFromCart(int cartId)
+    public IQueryable<CartItemEntity> GetAllFromCart(int? cartId)
     {
         return dbContext.CartItems.Where(it => it.CartId == cartId).AsQueryable();
     }

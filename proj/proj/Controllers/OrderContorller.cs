@@ -1,6 +1,9 @@
 ﻿using BLL.Dtos;
+using BLL.FluentValidation;
 using BLL.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using proj.Mappers;
 using proj.ViewModels;
 
 namespace proj.Controllers;
@@ -8,89 +11,83 @@ namespace proj.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly IOrderService _service;
+    private readonly IMapperVMs<OrderViewModel, OrderDto> _mapper;
+    private readonly OrderValidator _orderValidator;
 
-    public OrderController(IOrderService service)
+    public OrderController(IOrderService service, OrderValidator orderValidator, IMapperVMs<OrderViewModel, OrderDto> mapper)
     {
-        _service = service ?? throw new ArgumentException(nameof(service), "Service err");
+        _service = service ?? throw new ArgumentException("Service err", nameof(service));
+        _orderValidator = orderValidator ?? throw new ArgumentException("Service err", nameof(orderValidator));;
+        _mapper = mapper ?? throw new ArgumentException("Service err", nameof(mapper));
     }
 
-    [HttpGet("GetOrderById{id:int}")]
-    public OrderViewModel GetById(int id)
+    [HttpGet("GetOrderById")]
+    [ProducesResponseType(typeof(OrderViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<OrderViewModel> GetById([FromQuery]int? id)
     {
+        if (id is null or < 0) return BadRequest("Id must be greater than zero and must not be null.");
         var dto = _service.Get(id);
-        return new OrderViewModel
-        {
-            Id = dto.Id,
-            PaymentDateTime = dto.PaymentDateTime,
-            DeliveryDateTime = dto.DeliveryDateTime,
-            UserId = dto.UserId
-        };
+        if (dto is null) return NotFound();
+        return Ok(_mapper.MapToVm(dto));
     }
 
     [HttpPost("CreateOrder")]
-    public OrderViewModel Create([FromBody] OrderViewModel orderViewModel)
+    [ProducesResponseType(typeof(OrderViewModel),StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<OrderViewModel> Create([FromBody] OrderViewModel orderViewModel)
     {
-        var dto = new OrderDto()
-        {
-            Id = orderViewModel.Id,
-            PaymentDateTime = orderViewModel.PaymentDateTime,
-            DeliveryDateTime = orderViewModel.DeliveryDateTime,
-            UserId = orderViewModel.UserId
-        };
-        orderViewModel.Id = _service.Create(dto);
-        return orderViewModel;
+        var dto = _mapper.MapToDto(orderViewModel);
+        var validationResult = _orderValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        orderViewModel.Id = _service.Create(dto!); 
+        return CreatedAtAction(nameof(Create), new { id = orderViewModel.Id }, orderViewModel);
     }
 
     [HttpPut("UpdateOrder")]
-    public OrderViewModel Update([FromBody] OrderViewModel orderViewModel)
+    [ProducesResponseType(typeof(ProductViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<OrderViewModel> Update([FromBody] OrderViewModel orderViewModel)
     {
-        _service.Update(new OrderDto()
-        {
-            Id = orderViewModel.Id,
-            PaymentDateTime = orderViewModel.PaymentDateTime,
-            DeliveryDateTime = orderViewModel.DeliveryDateTime,
-            UserId = orderViewModel.UserId
-        });
-        return orderViewModel;
+        var dto = _mapper.MapToDto(orderViewModel);
+        var validationResult = _orderValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        _service.Update(dto!);
+        return Ok(orderViewModel);
     }
 
-    [HttpDelete("DeleteOrder/{id:int}")]
-    public bool Delete(int id)
+    [HttpDelete("DeleteOrder")]
+    public ActionResult Delete([FromQuery]int id)
     {
         try
         {
             _service.Delete(id);
-            return true;
+            return Ok();
         }
         catch (ArgumentException)
         {
-            return false;
+            return NotFound();
         }
     }
 
-    [HttpGet("GetOrdersDelivered/{userId:int}")]
-    public IEnumerable<OrderViewModel> GetOrdersDelivered(int userId)
+    [HttpGet("GetOrdersDelivered")]
+    public ActionResult<OrderViewModel[]> GetOrdersDelivered([FromQuery]int userId)
     {
         var dtos = _service.GetOrdersDelivered(userId);
-        return dtos.Select(dto => new OrderViewModel
-        {
-            Id = dto.Id,
-            PaymentDateTime = dto.PaymentDateTime,
-            DeliveryDateTime = dto.DeliveryDateTime,
-            UserId = dto.UserId
-        });
+        if (dtos.IsNullOrEmpty()) return NotFound();
+
+        return Ok(dtos.Select(dto => _mapper.MapToVm(dto)!).ToArray());
     }
 
     [HttpGet("GetDeliveringOrders/{userId:int}")]
-    public IEnumerable<OrderViewModel> GetDeliveringOrders(int userId)
+    public ActionResult<OrderViewModel[]> GetDeliveringOrders(int userId)
     {
         var dtos = _service.GetDeliveringOrders(userId);
-        return dtos.Select(dto => new OrderViewModel
-        {
-            Id = dto.Id,
-            PaymentDateTime = dto.PaymentDateTime,
-            DeliveryDateTime = dto.DeliveryDateTime,
-            UserId = dto.UserId
-        });
+        if (dtos.IsNullOrEmpty()) return NotFound();
+
+        return Ok(dtos.Select(dto => _mapper.MapToVm(dto)!).ToArray());
     }
 }

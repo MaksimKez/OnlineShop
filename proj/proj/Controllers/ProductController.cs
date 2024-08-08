@@ -19,12 +19,12 @@ public class ProductController : ControllerBase
     public ProductController(IProductService service, IMapperVMs<ProductViewModel, ProductDto> mapper, ProductValidator productValidator)
     {
         _service = service ?? throw new ArgumentException("Service err", nameof(service));
-        _mapper = mapper ?? throw new ArgumentException("Mapper err", nameof(service));
-        _productValidator = productValidator ?? throw new ArgumentException("Validator err", nameof(service));
+        _mapper = mapper ?? throw new ArgumentException("Mapper err", nameof(mapper));
+        _productValidator = productValidator ?? throw new ArgumentException("Validator err", nameof(productValidator));
     }
 
     [HttpGet("GetProductById")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProductViewModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<ProductViewModel> GetById([FromBody] int? id)
@@ -36,7 +36,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet("GetOutOfStockProducts")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ProductViewModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<List<ProductViewModel>>> GetOutOfStock()
     {
@@ -47,17 +47,21 @@ public class ProductController : ControllerBase
     }
 
     [HttpPost("CreateProduct")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProductViewModel),StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<ProductViewModel> Create([FromBody] ProductViewModel productViewModel)
     {
         var dto = _mapper.MapToDto(productViewModel);
-        productViewModel.Id = _service.Create(dto!);
-        return Ok(productViewModel);
+        var validationResult = _productValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        productViewModel.Id = _service.Create(dto!); 
+        return CreatedAtAction(nameof(Create), new { id = productViewModel.Id }, productViewModel);
+
     }
 
     [HttpPut("UpdateProduct")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProductViewModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<ProductViewModel> Update([FromBody] ProductViewModel productViewModel)
     {
@@ -69,20 +73,20 @@ public class ProductController : ControllerBase
         return Ok(productViewModel);
     }
 
-    [HttpDelete("DeleteProduct/{id:int}")]
+    [HttpDelete("DeleteProduct")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public bool Delete(int id)
+    public ActionResult Delete([FromQuery]int id)
     {
         try
         {
             _service.Delete(id);
-            return true;
+            return Ok();
         }
         catch (ArgumentException)
         {
-            return false;
+            return NotFound();
         }
     }
 
