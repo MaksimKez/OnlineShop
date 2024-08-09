@@ -8,6 +8,8 @@ using proj.ViewModels;
 
 namespace proj.Controllers;
 
+[ApiController]
+[Route("api/[controller]")]
 public class CartItemController : ControllerBase
 {
     private readonly ICartItemService _service;
@@ -75,6 +77,7 @@ public class CartItemController : ControllerBase
     [HttpDelete("DeleteItem{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult Delete(int? id)
     {
         if (id is null or < 0) return BadRequest();

@@ -47,7 +47,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPost("CreateProduct")]
-    [ProducesResponseType(typeof(ProductViewModel),StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProductViewModel),StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<ProductViewModel> Create([FromBody] ProductViewModel productViewModel)
     {
@@ -57,7 +57,6 @@ public class ProductController : ControllerBase
         
         productViewModel.Id = _service.Create(dto!); 
         return CreatedAtAction(nameof(Create), new { id = productViewModel.Id }, productViewModel);
-
     }
 
     [HttpPut("UpdateProduct")]
@@ -74,15 +73,16 @@ public class ProductController : ControllerBase
     }
 
     [HttpDelete("DeleteProduct")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult Delete([FromQuery]int id)
+    public ActionResult Delete([FromQuery]int? id)
     {
+        if (id is null or < 0) return BadRequest();
         try
         {
             _service.Delete(id);
-            return Ok();
+            return NoContent();
         }
         catch (ArgumentException)
         {
@@ -93,7 +93,7 @@ public class ProductController : ControllerBase
     [HttpPatch("IncrementStock/{count:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult IncrementStock([FromBody] ProductViewModel productViewModel, [FromQuery] int count)
+    public ActionResult IncrementStock([FromBody] ProductViewModel productViewModel, [FromRoute] int count)
     {
         var dto = _mapper.MapToDto(productViewModel);
         var validationResult = _productValidator.Validate(dto!);
@@ -106,7 +106,7 @@ public class ProductController : ControllerBase
     [HttpPatch("DecrementStock/{count:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult DecrementStock([FromBody] ProductViewModel productViewModel, [FromQuery] int count)
+    public ActionResult DecrementStock([FromBody] ProductViewModel productViewModel, [FromRoute] int count)
     {
         var dto = _mapper.MapToDto(productViewModel);
         var validationResult = _productValidator.Validate(dto!);

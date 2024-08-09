@@ -34,7 +34,7 @@ public class OrderController : ControllerBase
     }
 
     [HttpPost("CreateOrder")]
-    [ProducesResponseType(typeof(OrderViewModel),StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OrderViewModel),StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<OrderViewModel> Create([FromBody] OrderViewModel orderViewModel)
     {
@@ -60,12 +60,16 @@ public class OrderController : ControllerBase
     }
 
     [HttpDelete("DeleteOrder")]
-    public ActionResult Delete([FromQuery]int id)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult Delete([FromQuery]int? id)
     {
+        if (id is null or < 0) return BadRequest();
         try
         {
             _service.Delete(id);
-            return Ok();
+            return NoContent();
         }
         catch (ArgumentException)
         {
@@ -74,17 +78,25 @@ public class OrderController : ControllerBase
     }
 
     [HttpGet("GetOrdersDelivered")]
-    public ActionResult<OrderViewModel[]> GetOrdersDelivered([FromQuery]int userId)
+    [ProducesResponseType(typeof(ProductViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<OrderViewModel[]> GetOrdersDelivered([FromQuery] int? userId)
     {
+        if (userId is null or < 0) return BadRequest();
         var dtos = _service.GetOrdersDelivered(userId);
         if (dtos.IsNullOrEmpty()) return NotFound();
 
         return Ok(dtos.Select(dto => _mapper.MapToVm(dto)!).ToArray());
     }
 
-    [HttpGet("GetDeliveringOrders/{userId:int}")]
-    public ActionResult<OrderViewModel[]> GetDeliveringOrders(int userId)
+    [HttpGet("GetDeliveringOrders")]
+    [ProducesResponseType(typeof(ProductViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<OrderViewModel[]> GetDeliveringOrders([FromQuery] int? userId)
     {
+        if (userId is null or < 0) return BadRequest();
         var dtos = _service.GetDeliveringOrders(userId);
         if (dtos.IsNullOrEmpty()) return NotFound();
 

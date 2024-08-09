@@ -38,13 +38,13 @@ public class OrderService : IOrderService
         _repository.Delete(id);
     }
 
-    public IEnumerable<OrderDto> GetOrdersDelivered(int userId)
+    public IEnumerable<OrderDto> GetOrdersDelivered(int? userId)
     {
         var orders =  _repository.GetOrdersDelivered(userId).ToList();
         return orders.Select(order => _mapper.MapToModel(order));
     }
 
-    public IEnumerable<OrderDto> GetDeliveringOrders(int userId)
+    public IEnumerable<OrderDto> GetDeliveringOrders(int? userId)
     {
         var orders =  _repository.GetDeliveringOrders(userId).ToList();
         return orders.Select(order => _mapper.MapToModel(order));

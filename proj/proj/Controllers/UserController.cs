@@ -36,6 +36,7 @@ public class UserController : ControllerBase
 
     [HttpGet("GetWithoutOrders")]
     [ProducesResponseType(typeof(UserViewModel[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserViewModel[]>> GetWithoutOrders()
     {
         var dtos = await _userService.GetAllWithoutOrders();
@@ -59,8 +60,8 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("UpdateUser")]
-    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)] [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<UserViewModel> UpdateUser([FromBody] UserViewModel userViewModel)
     {
         var dto = _mapper.MapToDto(userViewModel);
@@ -74,7 +75,7 @@ public class UserController : ControllerBase
     [HttpDelete("DeleteUser/{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult Delete([FromRoute]int? id)
+    public IActionResult Delete([FromRoute] int? id)
     { 
         if (id is null or < 0) return BadRequest();
         try 
