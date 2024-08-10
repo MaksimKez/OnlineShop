@@ -22,7 +22,7 @@ public class CartService : ICartService
         return _cartRepository.Create(entity);
     }
 
-    public CartDto Get(int id)
+    public CartDto Get(int? id)
     {
         return _mapper.MapToModel(_cartRepository.Read(id));
     }
@@ -32,7 +32,7 @@ public class CartService : ICartService
         _cartRepository.Update(_mapper.MapFromModel(dto));
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         _cartRepository.Delete(id);
     }

@@ -5,8 +5,9 @@ namespace BLL.Mappers;
 
 public class CartMapper : IMapper<CartDto, CartEntity>
 {
-    public CartDto MapToModel(CartEntity cartEntity)
+    public CartDto? MapToModel(CartEntity? cartEntity)
     {
+        if (cartEntity is null) return null;
         return new CartDto()
         {
             Id = cartEntity.Id,
@@ -14,8 +15,9 @@ public class CartMapper : IMapper<CartDto, CartEntity>
             TotalPrice = cartEntity.TotalPrice
         };
     }
-    public CartEntity MapFromModel(CartDto cartDto)
+    public CartEntity? MapFromModel(CartDto? cartDto)
     {
+        if (cartDto is null) return null;
         return new CartEntity()
         {
             Id = cartDto.Id,

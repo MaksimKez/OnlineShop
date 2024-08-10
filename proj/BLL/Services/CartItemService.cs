@@ -22,7 +22,7 @@ public class CartItemService : ICartItemService
         return _repository.Create(entity);
     }
 
-    public CartItemDto Get(int id)
+    public CartItemDto Get(int? id)
     {
         return _mapper.MapToModel(_repository.Read(id));
     }
@@ -32,12 +32,12 @@ public class CartItemService : ICartItemService
         _repository.Update(_mapper.MapFromModel(dto));
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         _repository.Delete(id);
     }
 
-    public async Task<IQueryable<CartItemDto>> GetAllFromCart(int cartId)
+    public async Task<IQueryable<CartItemDto>> GetAllFromCart(int? cartId)
     {
         var items = _repository.GetAllFromCart(cartId);
         return await Task.FromResult(items.Select(item => _mapper.MapToModel(item)));

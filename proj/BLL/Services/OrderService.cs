@@ -23,7 +23,7 @@ public class OrderService : IOrderService
         return _repository.Create(entity);
     }
 
-    public OrderDto Get(int id)
+    public OrderDto Get(int? id)
     {
         return _mapper.MapToModel(_repository.Read(id));
     }
@@ -33,18 +33,18 @@ public class OrderService : IOrderService
         _repository.Update(_mapper.MapFromModel(dto));
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         _repository.Delete(id);
     }
 
-    public IEnumerable<OrderDto> GetOrdersDelivered(int userId)
+    public IEnumerable<OrderDto> GetOrdersDelivered(int? userId)
     {
         var orders =  _repository.GetOrdersDelivered(userId).ToList();
         return orders.Select(order => _mapper.MapToModel(order));
     }
 
-    public IEnumerable<OrderDto> GetDeliveringOrders(int userId)
+    public IEnumerable<OrderDto> GetDeliveringOrders(int? userId)
     {
         var orders =  _repository.GetDeliveringOrders(userId).ToList();
         return orders.Select(order => _mapper.MapToModel(order));

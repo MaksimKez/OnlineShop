@@ -4,5 +4,5 @@ namespace BLL.Services;
 
 public interface ICartItemService : IService<CartItemDto>
 {
-    Task<IQueryable<CartItemDto>> GetAllFromCart(int cartId);
+    Task<IQueryable<CartItemDto>> GetAllFromCart(int? cartId);
 }

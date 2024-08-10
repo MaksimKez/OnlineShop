@@ -11,10 +11,10 @@ public class ProductRepository(ApplicationDbContext dbContext) : IProductReposit
         return product.Entity.Id;
     }
 
-    public ProductEntity Read(int id)
+    public ProductEntity? Read(int? id)
     {
         var product = dbContext.Products.FirstOrDefault(pr => pr.Id == id);
-        return product ?? throw new ArgumentException(nameof(id));
+        return product;
     }
 
     public void Update(ProductEntity entity)
@@ -23,7 +23,7 @@ public class ProductRepository(ApplicationDbContext dbContext) : IProductReposit
         dbContext.SaveChanges();
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         var product = dbContext.Products.FirstOrDefault(us => us.Id == id);
         if (product == null)

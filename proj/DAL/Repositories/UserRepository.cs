@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories;
 
@@ -11,10 +12,10 @@ public class UserRepository(ApplicationDbContext dbContext) : IUserRepository
         return user.Entity.Id;
     }
 
-    public UserEntity Read(int id)
+    public UserEntity? Read(int? id)
     {
         var user = dbContext.Users.FirstOrDefault(us => us.Id == id);
-        return user ?? throw new ArgumentException(nameof(id));
+        return user;
     }
 
     public void Update(UserEntity userEntity)
@@ -23,7 +24,7 @@ public class UserRepository(ApplicationDbContext dbContext) : IUserRepository
         dbContext.SaveChanges();
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         var user = dbContext.Users.FirstOrDefault(us => us.Id == id);
         if (user == null)
@@ -34,8 +35,7 @@ public class UserRepository(ApplicationDbContext dbContext) : IUserRepository
 
     public IQueryable<UserEntity> GetAllWithoutOrders()
     {
-        return from us in dbContext.Users
-            where us.Orders == null
-            select us;
+        return dbContext.Users
+            .Where(us => us.Orders == null || us.Orders.Count == 0);
     }
 }

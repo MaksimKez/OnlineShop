@@ -1,102 +1,91 @@
-﻿using System.Data.SqlTypes;
-using BLL.Dtos;
+﻿using BLL.Dtos;
+using BLL.FluentValidation;
 using BLL.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using proj.Mappers;
 using proj.ViewModels;
 
 namespace proj.Controllers;
 
 [ApiController]
+[Route("api/[controller]")]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
-
-    public UserController(IUserService userService)
+    private readonly IMapperVMs<UserViewModel, UserDto> _mapper;
+    private readonly UserValidator _userValidator;
+    public UserController(IUserService userService, IMapperVMs<UserViewModel, UserDto> mapper, UserValidator userValidator)
     {
         _userService = userService;
+        _mapper = mapper;
+        _userValidator = userValidator;
     }
 
-    [HttpGet("GetById/{id:int}")]
-    public UserViewModel Get(int id)
+    [HttpGet("GetUserById")]
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<UserViewModel> Get([FromQuery]int? id)
     {
+        if (id is null or < 0) return BadRequest("Id must be greater than zero and must not be null.");
         var dto = _userService.Get(id);
-        return new UserViewModel()
-        {
-            Id = dto.Id,
-            Username = dto.Username,
-            FirstName = dto.FirstName,
-            SecondName = dto.SecondName,
-            CartId = dto.CartId,
-            DateOfBirth = dto.DateOfBirth,
-            Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber
-        };
+        if (dto is null) return NotFound();
+        return Ok(_mapper.MapToVm(dto));
     }
 
     [HttpGet("GetWithoutOrders")]
-    public async Task<UserViewModel[]> GetWithoutOrders()
+    [ProducesResponseType(typeof(UserViewModel[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserViewModel[]>> GetWithoutOrders()
     {
         var dtos = await _userService.GetAllWithoutOrders();
-        var users = dtos.Select(dto => new UserViewModel()
-        {
-            Id = dto.Id,
-            Username = dto.Username,
-            FirstName = dto.FirstName,
-            SecondName = dto.SecondName,
-            CartId = dto.CartId,
-            DateOfBirth = dto.DateOfBirth,
-            Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber
-        });
-        return users.ToArray();
+        if (dtos.IsNullOrEmpty()) return NotFound();
+        
+        var users = dtos.Select(dto => _mapper.MapToVm(dto)).ToArray();
+        return Ok(users);
     }
 
     [HttpPost("CreateUser")]
-    public UserViewModel Create([FromBody] UserViewModel userViewModel)
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<UserViewModel> Create([FromBody] UserViewModel userViewModel)
     {
-        var dto = new UserDto()
-        {
-            Id = userViewModel.Id,
-            Username = userViewModel.Username,
-            FirstName = userViewModel.FirstName,
-            SecondName = userViewModel.SecondName,
-            CartId = userViewModel.CartId,
-            DateOfBirth = userViewModel.DateOfBirth,
-            Email = userViewModel.Email,
-            PhoneNumber = userViewModel.PhoneNumber
-        };
-        userViewModel.Id = _userService.Create(dto);
-        return userViewModel;
+        var dto = _mapper.MapToDto(userViewModel);
+        var validationResult = _userValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        userViewModel.Id = _userService.Create(dto!); 
+        return CreatedAtAction(nameof(Create), new { id = userViewModel.Id }, userViewModel);
     }
 
     [HttpPut("UpdateUser")]
-    public UserViewModel UpdateUser([FromBody] UserViewModel userViewModel)
+    [ProducesResponseType(typeof(UserViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<UserViewModel> UpdateUser([FromBody] UserViewModel userViewModel)
     {
-        _userService.Update(new UserDto()
-        {
-            Id = userViewModel.Id,
-            Username = userViewModel.Username,
-            FirstName = userViewModel.FirstName,
-            SecondName = userViewModel.SecondName,
-            CartId = userViewModel.CartId,
-            DateOfBirth = userViewModel.DateOfBirth,
-            Email = userViewModel.Email,
-            PhoneNumber = userViewModel.PhoneNumber
-        });
-        return userViewModel;
+        var dto = _mapper.MapToDto(userViewModel);
+        var validationResult = _userValidator.Validate(dto!);
+        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+        
+        _userService.Update(dto!);
+        return Ok(userViewModel);
     }
 
-    [HttpDelete("Delete/{id:int}")]
-    public bool Delete(int id)
-    {
-        try
-        {
+    [HttpDelete("DeleteUser/{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Delete([FromRoute] int? id)
+    { 
+        if (id is null or < 0) return BadRequest();
+        try 
+        { 
             _userService.Delete(id);
-            return true;
+            return NoContent();
         }
-        catch (ArgumentException)
-        {
-            return false;
+        catch (ArgumentException) 
+        { 
+            return NotFound();
         }
     }
 }

@@ -5,6 +5,6 @@ namespace DAL.Repositories;
 
 public interface IOrderRepository : ICrudRepository<OrderEntity>
 {
-    IQueryable<OrderEntity> GetOrdersDelivered(int userId);
-    IQueryable<OrderEntity> GetDeliveringOrders(int userId);
+    IQueryable<OrderEntity> GetOrdersDelivered(int? userId);
+    IQueryable<OrderEntity> GetDeliveringOrders(int? userId);
 }

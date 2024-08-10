@@ -22,7 +22,7 @@ public class UserService : IUserService
         return _userRepository.Create(entity);
     }
 
-    public UserDto Get(int id)
+    public UserDto? Get(int? id)
     {
         return _mapper.MapToModel(_userRepository.Read(id));
     }
@@ -32,7 +32,7 @@ public class UserService : IUserService
         _userRepository.Update(_mapper.MapFromModel(dto));
     }
 
-    public void Delete(int id)
+    public void Delete(int? id)
     {
         _userRepository.Delete(id);
     }
