@@ -7,7 +7,7 @@ using DAL.Repositories;
 using FluentAssertions;
 using Moq;
 
-namespace BLL.Tests;
+namespace BLL.Tests.ServicesTests;
 
 public class UserServiceTest
 {
@@ -17,13 +17,14 @@ public class UserServiceTest
     private UserDto _userDto;
     private Fixture _fixture;
     private IUserService _underTest;
+    
     [SetUp]
     public void Setup()
     {
         _fixture = new Fixture();
         // Replaces the default behavior that throws on circular references with one that omits them.
         _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
-            .ForEach(b => _fixture.Behaviors.Remove(b));
+            .ForEach(behavior => _fixture.Behaviors.Remove(behavior));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _userEntity = _fixture.Create<UserEntity>();
@@ -48,6 +49,12 @@ public class UserServiceTest
     [TearDown]
     public void TearDown()
     {
+        _mapperMock = null;
+        _repositoryMock = null;
+        _userEntity = null;
+        _userDto = null;
+        _fixture = null;
+        _underTest = null;
     }
     
     [Test]
